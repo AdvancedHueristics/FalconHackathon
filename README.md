@@ -1,2 +1,2 @@
 # FalconHackathon
-Repository for the lablab.ai Falcon Hackathon.  
+Repository for lablab.ai Falcon Hackathon.  
