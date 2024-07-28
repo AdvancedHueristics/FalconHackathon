@@ -1,5 +1,5 @@
 from langchain.tools import BaseTool
-import medbot_backend.agents.heartrateAnalyzerAgent.service.heartRateAnalyzerAgentService as subAgentservice
+from medbot_backend.agents.heartrateAnalyzerAgent.service.heartRateAnalyzerAgentService import heartRateAnalyzerService as subAgentService
 
 class HeartRateAnalyzerAgent(BaseTool):
     name = ""
@@ -14,4 +14,7 @@ class HeartRateAnalyzerAgent(BaseTool):
         self.return_direct = False    
     
     def _run(self, input, run_manager) -> str:
-        return "Your heart rate seems to be fine."
+        print(run_manager.tags)
+        userId = run_manager.tags[0]
+        heartRateData = subAgentService.fetch_heart_rate_data(userId=userId)
+        return heartRateData

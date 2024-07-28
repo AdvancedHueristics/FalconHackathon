@@ -2,15 +2,14 @@ from medbot_backend.agents.heartrateAnalyzerAgent.agent import HeartRateAnalyzer
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain.memory import ConversationBufferMemory
-from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain_openai import ChatOpenAI
 import GlobalConstants
 from medbot_backend.utils import getPromptTemplate
 
 agents = {
     HeartRateAnalyzerAgent : {
-        "name": "HeartRateAnalyzerAgent",
-        "description": "This agent analyze the heart rate and predicts near future."
+        "name": "Heart_Rate_Analyzer",
+        "description": "This agent fetches the heart rate data, analyze it and predicts near future."
     }
 }
 
@@ -18,7 +17,7 @@ agents = {
 
 def getMemory(userId):
     message_history = SQLChatMessageHistory(
-        connection_string="mysql+pymysql://root:owaisahmed123@localhost:3306/medbot_db",
+        connection="mysql+pymysql://root:owaisahmed123@localhost:3306/medbot_db",
         session_id=userId,
         table_name="chat_history",
     )
@@ -33,30 +32,28 @@ def getMemory(userId):
 
 
 def getLLM():
-    # repo_id = "tiiuae/falcon-7b-instruct"
-    # llm = HuggingFaceHub(huggingfacehub_api_token=GlobalConstants.LLM_API_KEY, 
-    #                     repo_id=repo_id, 
-    #                     model_kwargs={"temperature":0.6, "max_new_tokens":500})    
     llm = ChatOpenAI(
             temperature=0,
-            model='gpt-4-turbo',
+            model=GlobalConstants.LLM_MODEL,
             openai_api_key=GlobalConstants.LLM_API_KEY,
+            base_url=GlobalConstants.AI71_BASE_URL
         )    
 
     return llm
 
 
 def createRouterAgent(userId):
-    tools = []
+    subAgents = []
     for agent in agents:
-        tools.append(agent(agentJson=agents[agent], userId=userId))
+        subAgents.append(agent(agentJson=agents[agent], userId=userId))
+    print(subAgents)
     memory = getMemory(userId=userId)
     prompt = getPromptTemplate(GlobalConstants.MAIN_AGENT_SYSTEM_MESSAGE)
     llm = getLLM()    
-    agent = create_openai_tools_agent(llm, tools, prompt)
+    agent = create_openai_tools_agent(llm=llm, tools=subAgents, prompt=prompt)
     agent_executor = AgentExecutor(
         agent=agent,
-        tools=tools,
+        tools=subAgents,
         verbose=GlobalConstants.IS_DEBUG_MODE,
         memory=memory,
         max_iterations=GlobalConstants.MAX_AGENT_ITERATIONS

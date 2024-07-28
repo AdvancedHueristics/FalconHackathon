@@ -16,6 +16,7 @@ def chat(request):
         agent = AgentService.createRouterAgent(userId)
         memory = AgentService.getMemory(userId)
         chat_history = memory.buffer_as_messages    
+        print(chat_history)
 
         response = agent.invoke(
             {"input": query, "chat_history": chat_history},
